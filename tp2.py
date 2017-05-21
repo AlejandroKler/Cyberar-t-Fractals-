@@ -1,11 +1,11 @@
 def main():
     """
-    Primary function of the program. Includes user interface.
+    Primary function of the program.
     """
-    coordinates = {} # Global variable
+    coordinates = {}
     # User input
     colour_list= {"BLANCO":"255 255 255","NEGRO":"0 0 0","MAGENTA":"255 0 255","AMARILLO":"255 255 0","ROJO":"255 0 0","VERDE":"0 255 0","AZUL": "0 0 255"}
-    final_name = input ("Ingrese del nombre del archivo sin extencion: ")
+    final_name = input("Ingrese del nombre del archivo sin extencion: ")
     while True:
         size_x = input("Ingrese el tamaño en x: ")
         if size_x.isdigit():
@@ -207,5 +207,17 @@ def mirror(body,horizontal,vertical):
         mirrors.extend(aux)
     body.extend(mirrors) # Merge both lists
     return body
+
+def ask_number(message,data=None):
+    """ 
+    Ask for a user number and loop until is numeric.
+    """
+    while True:
+        ask = input(message.format(data))
+        if ask.isdigit():
+            ask = int(ask)
+            break
+        print("Debe ingresar un numero.")
+    return ask
 
 main()
