@@ -6,67 +6,32 @@ def main():
     # User input
     colour_list= {"BLANCO":"255 255 255","NEGRO":"0 0 0","MAGENTA":"255 0 255","AMARILLO":"255 255 0","ROJO":"255 0 0","VERDE":"0 255 0","AZUL": "0 0 255"}
     final_name = input("Ingrese del nombre del archivo sin extencion: ")
-    while True:
-        size_x = input("Ingrese el tamaño en x: ")
-        if size_x.isdigit():
-            size_x = int(size_x)
-            break
-    while True:
-        size_y = input("Ingrese el tamaño en y: ")
-        if size_y.isdigit():
-            size_y = int(size_y)
-            break
+    size_x = ask_number("Ingrese el tamaño en x: ")
+    size_y = ask_number("Ingrese el tamaño en y: ")
+    size = [size_x,size_y]
     aux = 0
     while True:
         aux += 1
-        while True:
-            coor_x = input("Ingrese la coordenada x del monticulo {}: ".format(aux))
-            if coor_x.isdigit():
-                coor_x = int(coor_x)
-                break
-        while True:
-            coor_y = input("Ingrese la coordenada y del monticulo {}: ".format(aux))
-            if coor_y.isdigit():
-                coor_y = int(coor_y)
-                break
-        while True:
-            quantity = input("Ingrese la cantidad de arena del monticulo {}: ".format(aux))
-            if quantity.isdigit():
-                quantity = int(quantity)
-                break
+        coor_x = ask_number("Ingrese la coordenada x del monticulo {}: ",aux)
+        coor_y = ask_number("Ingrese la coordenada y del monticulo {}: ",aux)
+        quantity = ask_number("Ingrese la cantidad de arena del monticulo {}: ",aux)
         coordinates[(coor_x,coor_y)] = quantity
-        more = input("Desea ingresar otro monticulo? (S/N): ")
-        if not more.upper() == "S":
+        more = input("Desea ingresar otro monticulo? (SI/NO): ")
+        if not more.upper() == "SI":
             break
-    config = input("Desea personalizar los parametros? (S/N): ")
+    config = input("Desea personalizar los parametros? (SI/NO): ")
     vertical = 1
     horizontal = 1
     vertical_mirror = 1
     horizontal_mirror = 1
     colours = ["0 0 0","255 0 255","255 0 0","255 255 0"] # Default colours
-    if config.upper() == "S":
-        while True:
-            vertical = input("Tamaño de celda vertical: ")
-            if vertical.isdigit():
-                vertical = int(vertical)
-                break
-        while True:
-            horizontal = input("Tamaño de celda horizontal: ")
-            if horizontal.isdigit():
-                horizontal = int(horizontal)
-                break
-        while True:
-            vertical_mirror = input("Espejado vertical: ")
-            if vertical_mirror.isdigit():
-                vertical_mirror = int(vertical_mirror)
-                break
-        while True:
-            horizontal_mirror = input("Espejado horizontal: ")
-            if horizontal_mirror.isdigit():
-                horizontal_mirror = int(horizontal_mirror)
-                break
-        conf_colour = input("Desea personalizar los colores? (S/N): ")
-        if conf_colour.upper() == "S":
+    if config.upper() == "SI":
+        vertical = ask_number("Tamaño de celda vertical: ")
+        horizontal = ask_number("Tamaño de celda horizontal: ")
+        vertical_mirror = ask_number("Espejado vertical: ")
+        horizontal_mirror = ask_number("Espejado horizontal: ")
+        conf_colour = input("Desea personalizar los colores? (SI/NO): ")
+        if conf_colour.upper() == "SI":
             colours = []
             print("Colores disponibles:")
             print(colour_list.keys())
@@ -80,7 +45,7 @@ def main():
     # Generate the map
     print("Procesando, espere por favor...")
     while True:
-        coordinates,repeat = topple(coordinates,size_x,size_y)
+        coordinates,repeat = topple(coordinates,size)
         if not repeat:
             break
     # Generate the content of the file
@@ -89,17 +54,16 @@ def main():
     body = mirror(body_list,horizontal_mirror,vertical_mirror)
     file_content = generate_text(head,body,horizontal,vertical)
     # Write into the file
-    write(final_name,file_content)
+    write_file(final_name,file_content)
     print("Final")
     return
 
-def topple(coordinates,size_x,size_y):
+def topple(coordinates,size):
     """
     Topple a given coordinate map using sandpiles method. Also, return if the map needs to be topple again.
     Params:
         coordinates (dictionary) Contains coordinate map to topple
-        size_x (int) Size of x coordinates
-        size_y (int) Size of y coordinates
+        size (list) Contains x and y coordinates, in that order
     Return:
         dictionary: The coordinate map after the topple
         bool: True if there is a field with more than 3 sands. False otherwise.
@@ -112,40 +76,38 @@ def topple(coordinates,size_x,size_y):
             # for coor in (left,right,up,down)
             for coor in ((key[0]-1,key[1]), (key[0]+1,key[1]), (key[0],key[1]-1), (key[0],key[1]+1)): 
                 # Not need for coordinates outside the limits
-                if coor[0] >= 0 and coor[1] >= 0 and coor[0] <= size_x and coor[1] <= size_y:
+                if coor[0] >= 0 and coor[1] >= 0 and coor[0] <= size[0] and coor[1] <= size[1]:
                     old = coordinates.get(coor,0)
                     coordinates[coor] = old + value # Add the new value
                     if (old + value) > 3:
                         need_to_repeat = True
     return coordinates,need_to_repeat
 
-def generate_body(coordinates,colours,size_x,size_y):
+def generate_body(coordinates,colours,size):
     """
     Generate the body to add in a ppm file. Every list represent a horizontal line, wich includes a list with every bit on it.
     Params:
         coordinates (dictionary) Contains coordinate map to transform
         colours (list) Must contain four colours, correspond to 0,1,2,3 respectively
-        size_x (int) Size of x coordinates
-        size_y (int) Size of y coordinates
+        size (list) Contains x and y coordinates, in that order
     Return:
         list: List of lists of the body
     """
     y_list = []
     if not len(colours) == 4:
         return False
-    for y in range(0,size_y):
+    for y in range(0,size[1]):
         x_list = []
-        for x in range(0,size_x):
+        for x in range(0,size[0]):
             x_list.append("\n"+str(colours[coordinates.get((x,y),0)]))
         y_list.append(x_list)
     return y_list
 
-def generate_head(size_x,size_y,horizontal,vertical,h_mirror,v_mirror):
+def generate_head(size,horizontal,vertical,h_mirror,v_mirror):
     """
     Generate the head text to add in a ppm file.
     Params:
-        size_x (int) Size of x coordinates
-        size_y (int) Size of y coordinates
+        size (list) Contains x and y coordinates, in that order
         horizontal (int) Pixels for each x coordinate
         vertical (int) Pixels for each y coordinate
         h_mirror (int) Times to mirror in horizontal
@@ -153,7 +115,7 @@ def generate_head(size_x,size_y,horizontal,vertical,h_mirror,v_mirror):
     Return:
         string: Text of the head
     """
-    return "P3\n"+str(size_x*horizontal*h_mirror)+" "+str(size_y*vertical*v_mirror)+"\n255"
+    return "P3\n"+str(size[0]*horizontal*h_mirror)+" "+str(size[1]*vertical*v_mirror)+"\n255"
 
 def generate_text(head,body_list,horizontal,vertical):
     """
@@ -174,7 +136,7 @@ def generate_text(head,body_list,horizontal,vertical):
                     text += pixel
     return text
 
-def write(name,content):
+def write_file(name,content):
     """ 
     Write or create a ppm file and insert the content.
     Params:
@@ -210,14 +172,19 @@ def mirror(body,horizontal,vertical):
 
 def ask_number(message,data=None):
     """ 
-    Ask for a user number and loop until is numeric.
+    Ask for a user input and validate it to be a positive number.
+    Params:
+        message (string) Input content
+        data (optional) String or number to be show in the input by format method.
+    Return:
+        int: Int value of user input
     """
     while True:
         ask = input(message.format(data))
-        if ask.isdigit():
+        if ask.isdigit() and ask > 0:
             ask = int(ask)
             break
-        print("Debe ingresar un numero.")
+        print("Debe ingresar un numero positivo.")
     return ask
 
 main()
