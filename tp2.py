@@ -8,7 +8,6 @@ def main():
     final_name = input("Ingrese del nombre del archivo sin extencion: ")
     size_x = ask_number("Ingrese el tamaño en x: ")
     size_y = ask_number("Ingrese el tamaño en y: ")
-    size = [size_x,size_y]
     aux = 0
     while True:
         aux += 1
@@ -42,21 +41,32 @@ def main():
                         colours.append(colour_list[selected.upper()])
                         break
                     print("Por favor, escriba un color de la lista")
+    # Set list of parameters
+    size = [size_x,size_y]
+    pixel_size = [horizontal,vertical]
+    mirror = [horizontal_mirror,vertical_mirror]
     # Generate the map
     print("Procesando, espere por favor...")
-    while True:
-        coordinates,repeat = topple(coordinates,size)
-        if not repeat:
-            break
+    coordinates = generate_map(coordinates,size)
     # Generate the content of the file
-    head = generate_head(size_x,size_y,horizontal,vertical,horizontal_mirror,vertical_mirror)
-    body_list = generate_body(coordinates,colours,size_x,size_y)
-    body = mirror(body_list,horizontal_mirror,vertical_mirror)
-    file_content = generate_text(head,body,horizontal,vertical)
+    head = generate_head(size,pixel_size,mirror)
+    body_list = generate_body(coordinates,colours,size)
+    body = mirror(body_list,mirror)
+    file_content = generate_text(head,body,pixel_size)
     # Write into the file
     write_file(final_name,file_content)
     print("Final")
     return
+
+def generate_map(coordinates,size):
+    """
+    
+    """
+    while True:
+        coordinates,repeat = topple(coordinates,size)
+        if not repeat:
+            break
+    return coordinates
 
 def topple(coordinates,size):
     """
@@ -103,36 +113,33 @@ def generate_body(coordinates,colours,size):
         y_list.append(x_list)
     return y_list
 
-def generate_head(size,horizontal,vertical,h_mirror,v_mirror):
+def generate_head(size,pixel_size,mirror):
     """
     Generate the head text to add in a ppm file.
     Params:
         size (list) Contains x and y coordinates, in that order
-        horizontal (int) Pixels for each x coordinate
-        vertical (int) Pixels for each y coordinate
-        h_mirror (int) Times to mirror in horizontal
-        v_mirror (int) Times to mirror in vertical
+        pixel_size (list) Contains pixels quantity for each x and y coordinate, in that order
+        mirror (list) Contains times to mirror in horizontal and vertical, in that order
     Return:
         string: Text of the head
     """
-    return "P3\n"+str(size[0]*horizontal*h_mirror)+" "+str(size[1]*vertical*v_mirror)+"\n255"
+    return "P3\n"+str(size[0]*pixel_size[0]*mirror[0])+" "+str(size[1]*pixel_size[1]*mirror[1])+"\n255"
 
-def generate_text(head,body_list,horizontal,vertical):
+def generate_text(head,body_list,pixel_size):
     """
     Create the final content of a ppm file.
     Params:
         head (string) Text for the header
         body_list (list) List of lists, than represent the body.
-        horizontal (int) Pixels for each x coordinate
-        vertical (int) Pixels for each y coordinate
+        pixel_size (list) Contains pixels quantity for each x and y coordinate, in that order
     Return:
         string: Full content of the ppm file 
     """
     text = head
     for sub_list in body_list:
-        for v in range(0,vertical):
+        for v in range(0,pixel_size[1]):
             for pixel in sub_list:
-                for h in range(0,horizontal):
+                for h in range(0,pixel_size[0]):
                     text += pixel
     return text
 
@@ -148,26 +155,25 @@ def write_file(name,content):
         f.write(content)
     return
 
-def mirror(body,horizontal,vertical):
+def mirror(body,mirror):
     """
     Mirror the image in horizontal and vertical form
     Params:
         body (list) List of lists, than represent the body.
-        horizontal (int) Times to mirror in horizontal
-        vertical (int) Times to mirror in vertical
+        mirror (list) Contains times to mirror in horizontal and vertical, in that order
     """
-    for i in range(1,horizontal): # Times to mirror in horizontal
-        mirrors = []
+    for i in range(1,mirror[0]): # Times to mirror in horizontal
+        mirrors_aux = []
         for y in body: # Reed every "line" to be reversed
             aux = y[::-1] # as reverse()
-            mirrors.append(aux)
-        for e,m in enumerate(mirrors):
-            body[e].extend(mirrors[e]) # Merge both lists
-    mirrors = []
-    for i in range(1,vertical): # Times to mirror in vertical
+            mirrors_aux.append(aux)
+        for e,m in enumerate(mirrors_aux):
+            body[e].extend(mirrors_aux[e]) # Merge both lists
+    mirrors_aux = []
+    for i in range(1,mirror[1]): # Times to mirror in vertical
         aux = body[::-1] # as reverse()
-        mirrors.extend(aux)
-    body.extend(mirrors) # Merge both lists
+        mirrors_aux.extend(aux)
+    body.extend(mirrors_aux) # Merge both lists
     return body
 
 def ask_number(message,data=None):
