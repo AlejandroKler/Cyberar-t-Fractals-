@@ -3,6 +3,8 @@ def main():
     Primary function of the program.
     """
     coordinates = {}
+    sandpiles = 4 # Represent the maximun number to topple. Example: 4 => (0,1,2,3)
+    colours = ["0 0 0","255 0 255","255 0 0","255 255 0"] # Default colours (length must be equal to sandpiles variable)
     # User input
     colour_list= {"BLANCO":"255 255 255","NEGRO":"0 0 0","MAGENTA":"255 0 255","AMARILLO":"255 255 0","ROJO":"255 0 0","VERDE":"0 255 0","AZUL": "0 0 255"}
     final_name = input("Ingrese del nombre del archivo sin extencion: ")
@@ -23,7 +25,6 @@ def main():
     horizontal = 1
     vertical_mirror = 1
     horizontal_mirror = 1
-    colours = ["0 0 0","255 0 255","255 0 0","255 255 0"] # Default colours
     if config.upper() == "SI":
         vertical = ask_number("Tamaño de celda vertical: ")
         horizontal = ask_number("Tamaño de celda horizontal: ")
@@ -34,13 +35,14 @@ def main():
             colours = []
             print("Colores disponibles:")
             print(colour_list.keys())
-            for n in (0,1,2,3):
+            for n in range(0,sandpiles):
                 while True:
                     selected = input("Escriba el color que representa el {}:".format(n))
                     if selected.upper() in colour_list:
                         colours.append(colour_list[selected.upper()])
                         break
                     print("Por favor, escriba un color de la lista")
+                    print(colour_list.keys())
     # Set list of parameters
     size = [size_x,size_y]
     pixel_size = [horizontal,vertical]
@@ -60,7 +62,12 @@ def main():
 
 def generate_map(coordinates,size):
     """
-    
+    Loop topple function until get the map stable.
+    Params:
+        coordinates (dictionary) Contains coordinate map to topple
+        size (list) Contains x and y coordinates, in that order
+    Return:
+        dictionary: The stable coordinate map
     """
     while True:
         coordinates,repeat = topple(coordinates,size)
@@ -98,14 +105,12 @@ def generate_body(coordinates,colours,size):
     Generate the body to add in a ppm file. Every list represent a horizontal line, wich includes a list with every bit on it.
     Params:
         coordinates (dictionary) Contains coordinate map to transform
-        colours (list) Must contain four colours, correspond to 0,1,2,3 respectively
+        colours (list) Must contain colours, correspond to each sandpile number
         size (list) Contains x and y coordinates, in that order
     Return:
         list: List of lists of the body
     """
     y_list = []
-    if not len(colours) == 4:
-        return False
     for y in range(0,size[1]):
         x_list = []
         for x in range(0,size[0]):
