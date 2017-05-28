@@ -54,10 +54,11 @@ def main():
     head = generate_head(size,pixel_size,mirror)
     body_list = generate_body(coordinates,colours,size)
     body = mirror(body_list,mirror)
-    file_content = generate_text(head,body,pixel_size)
     # Write into the file
-    write_file(final_name,file_content)
-    print("Final")
+    if write_file(final_name,head,body,pixel_size):
+        print("Final")
+    else:
+        print("Ha ocurrido un error.")
     return
 
 def generate_map(coordinates,size):
@@ -96,8 +97,7 @@ def topple(coordinates,size):
                 if coor[0] >= 0 and coor[1] >= 0 and coor[0] <= size[0] and coor[1] <= size[1]:
                     old = coordinates.get(coor,0)
                     coordinates[coor] = old + value # Add the new value
-                    if (old + value) > 3:
-                        need_to_repeat = True
+                    need_to_repeat = need_to_repeat or (old + value) > 3
     return coordinates,need_to_repeat
 
 def generate_body(coordinates,colours,size):
@@ -130,35 +130,30 @@ def generate_head(size,pixel_size,mirror):
     """
     return "P3\n"+str(size[0]*pixel_size[0]*mirror[0])+" "+str(size[1]*pixel_size[1]*mirror[1])+"\n255"
 
-def generate_text(head,body_list,pixel_size):
-    """
-    Create the final content of a ppm file.
+def write_file(name,head,body_list,pixel_size):
+    """ 
+    Write or create a ppm file..
     Params:
+        name (string) Name of the file (without extension)
         head (string) Text for the header
         body_list (list) List of lists, than represent the body.
         pixel_size (list) Contains pixels quantity for each x and y coordinate, in that order
     Return:
-        string: Full content of the ppm file 
+        bool: True on success
     """
-    text = head
-    for sub_list in body_list:
-        for v in range(0,pixel_size[1]):
-            for pixel in sub_list:
-                for h in range(0,pixel_size[0]):
-                    text += pixel
-    return text
-
-def write_file(name,content):
-    """ 
-    Write or create a ppm file and insert the content.
-    Params:
-        name (string) Name of the file (without extension)
-        content (string) Content to write in the file
-    """
-    final_name = name + ".ppm"
-    with open(final_name,"w") as f:
-        f.write(content)
-    return
+    try:
+        with open(name + ".ppm","w") as f:
+            f.write(head)
+            for sub_list in body_list:
+                for v in range(0,pixel_size[1]):
+                    for pixel in sub_list:
+                        text = ""
+                        for h in range(0,pixel_size[0]):
+                            text += pixel
+                        f.write(text)
+        return True
+    except IOError:
+        return False
 
 def mirror(body,mirror):
     """
