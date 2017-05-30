@@ -4,9 +4,10 @@ def main():
     """
     coordinates = {}
     sandpiles = 4 # Represent the maximun number to topple. Example: 4 => (0,1,2,3)
-    colours = ["0 0 0","255 0 255","255 0 0","255 255 0"] # Default colours (length must be equal to sandpiles variable)
+    colour_limit = "255";
+    colours = ["0 0 0",colour_limit+" 0 "+colour_limit,colour_limit+" 0 0",colour_limit+" "+colour_limit+" 0"] # Default colours (length must be equal to sandpiles variable)
     # User input
-    colour_list= {"BLANCO":"255 255 255","NEGRO":"0 0 0","MAGENTA":"255 0 255","AMARILLO":"255 255 0","ROJO":"255 0 0","VERDE":"0 255 0","AZUL": "0 0 255"}
+    colour_list= {"BLANCO":colour_limit+" "+colour_limit+" "+colour_limit,"NEGRO":"0 0 0","MAGENTA":colour_limit+" 0 "+colour_limit,"AMARILLO":colour_limit+" "+colour_limit+" 0","ROJO":colour_limit+" 0 0","VERDE":"0 "+colour_limit+" 0","AZUL": "0 0 "+colour_limit}
     final_name = input("Ingrese del nombre del archivo sin extencion: ")
     size_x = ask_number("Ingrese el tamaño en x: ")
     size_y = ask_number("Ingrese el tamaño en y: ")
@@ -51,8 +52,9 @@ def main():
     print("Procesando, espere por favor...")
     coordinates = generate_map(coordinates,size)
     # Generate the content of the file
-    head = generate_head(size,pixel_size,mirror)
+    head = generate_head(size,pixel_size,mirror,colour_limit)
     body_list = generate_body(coordinates,colours,size)
+    print(type(body_list))
     body = mirror(body_list,mirror)
     # Write into the file
     if write_file(final_name,head,body,pixel_size):
@@ -88,16 +90,18 @@ def topple(coordinates,size):
     """
     need_to_repeat = False
     for key in list(coordinates.keys()):
-        if coordinates[key] > 3:
-            value = coordinates[key] // 4
-            coordinates[key] = coordinates[key] % 4 # Update current field
-            # for coor in (left,right,up,down)
-            for coor in ((key[0]-1,key[1]), (key[0]+1,key[1]), (key[0],key[1]-1), (key[0],key[1]+1)): 
-                # Not need for coordinates outside the limits
-                if coor[0] >= 0 and coor[1] >= 0 and coor[0] <= size[0] and coor[1] <= size[1]:
-                    old = coordinates.get(coor,0)
-                    coordinates[coor] = old + value # Add the new value
-                    need_to_repeat = need_to_repeat or (old + value) > 3
+        if coordinates[key] <= 3:
+            continue
+        value = coordinates[key] // 4
+        coordinates[key] = coordinates[key] % 4 # Update current field
+        # for coor in (left,right,up,down)
+        for coor in ((key[0]-1,key[1]), (key[0]+1,key[1]), (key[0],key[1]-1), (key[0],key[1]+1)): 
+            # Not need for coordinates outside the limits
+            if coor[0] < 0 and coor[1] < 0 and coor[0] > size[0] and coor[1] > size[1]:
+                continue
+            old = coordinates.get(coor,0)
+            coordinates[coor] = old + value # Add the new value
+            need_to_repeat = need_to_repeat or (old + value) > 3
     return coordinates,need_to_repeat
 
 def generate_body(coordinates,colours,size):
@@ -118,17 +122,18 @@ def generate_body(coordinates,colours,size):
         y_list.append(x_list)
     return y_list
 
-def generate_head(size,pixel_size,mirror):
+def generate_head(size,pixel_size,mirror,colour_limit):
     """
     Generate the head text to add in a ppm file.
     Params:
         size (list) Contains x and y coordinates, in that order
         pixel_size (list) Contains pixels quantity for each x and y coordinate, in that order
         mirror (list) Contains times to mirror in horizontal and vertical, in that order
+        colour_limit (string) Maximum value of a colour
     Return:
         string: Text of the head
     """
-    return "P3\n"+str(size[0]*pixel_size[0]*mirror[0])+" "+str(size[1]*pixel_size[1]*mirror[1])+"\n255"
+    return "P3\n"+str(size[0]*pixel_size[0]*mirror[0])+" "+str(size[1]*pixel_size[1]*mirror[1])+"\n"+colour_limit
 
 def write_file(name,head,body_list,pixel_size):
     """ 
@@ -187,7 +192,7 @@ def ask_number(message,data=None):
     """
     while True:
         ask = input(message.format(data))
-        if ask.isdigit() and ask > 0:
+        if ask.isdigit() and int(ask) > 0:
             ask = int(ask)
             break
         print("Debe ingresar un numero positivo.")
