@@ -54,8 +54,7 @@ def main():
     # Generate the content of the file
     head = generate_head(size,pixel_size,mirror,colour_limit)
     body_list = generate_body(coordinates,colours,size)
-    print(type(body_list))
-    body = mirror(body_list,mirror)
+    body = do_mirror(body_list,mirror)
     # Write into the file
     if write_file(final_name,head,body,pixel_size):
         print("Final")
@@ -160,7 +159,7 @@ def write_file(name,head,body_list,pixel_size):
     except IOError:
         return False
 
-def mirror(body,mirror):
+def do_mirror(body,mirror):
     """
     Mirror the image in horizontal and vertical form
     Params:
